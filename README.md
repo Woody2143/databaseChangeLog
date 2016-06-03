@@ -16,5 +16,5 @@ This script loops through the *.sql files in the SQL/ directory. If the file has
 Filenames are "$datetime-$Summary.sql". By using the datetime the files are run in order.
 
 #DEVELOPMENT / PRODUCTION
-Is a config file containing connection information to the database. This is primarily used by other scripts in whatever application I'm working on. I don't normally track DEVELOPMENT/PRODUCTION in git; they are normally listed in .gitignore.
+Is a config file containing connection information to the database. This is primarily used by other scripts in whatever application I'm working on. The setupDemo.sh script will generate one for you.
 
