@@ -2,19 +2,17 @@
 
 use strict;
 use warnings;
+use Try::Tiny;
 use Config::Simple;
 use DBI;
 
-my $cfg;
+#TODO I may want to move to Try::Tiny
 
-#TODO Need to get this in a config file
-# LIkely don't need to, nor should, do this with the root user
-my $rootUser = 'root';
-my $rootPass = 'secret';
+#TODO figure out how to handle the 'path' issues.
+#     maybe just a variable in the beginning of the script.
+
 my @cfgParams = qw(host db user pass);
-
-#NOTE In the original script I had the full path to mysql / mysqldump
-#     likely need to make this a var set at the top of the script
+my $cfg;
 
 if ( -f 'DEVELOPMENT' ) {
     print "\nReading config file DEVELOPMENT. \n\n";
@@ -29,6 +27,10 @@ for my $param (@cfgParams) {
 }
 
 my $dbName = $cfg->param('db');
+my $user   = $cfg->param('user');
+my $pass   = $cfg->param('pass');
+my $host   = $cfg->param('host');
+my $prodDB = $cfg->param('prodDB');
 
 print "WARNING! This script will drop your development database: $dbName!\n";
 print "Are you sure? (YES / NO)\n";
@@ -36,21 +38,37 @@ my $answer = <STDIN>;
 chomp $answer;
 
 if ( $answer eq "YES" ) {
-    my $dbServerParams = "-h " . $cfg->param('host') . " -u $rootUser -p'$rootPass'";
-    eval {
+
+    my $dsn  = "DBI:mysql:database=$dbName;host=$host";
+    my %attr = ( ChopBlanks => 1, RaiseError => 1, AutoCommit => 1);
+
+    my $dbh = DBI->connect($dsn, $user, $pass, \%attr)
+        or die "Cannot connect to database: $DBI::errstr";
+
+    try {
         print "Dropping $dbName\n";
-        system "mysql $dbServerParams -e 'DROP DATABASE $dbName;' ";
+        #TODO change from ->do to ->quote
+        $dbh->do(q{DROP DATABASE ?;}, undef, $dbName);
 
         print "Creating $dbName\n";
-        system "mysql $dbServerParams -e 'CREATE DATABASE $dbName;' ";
+        $dbh->do(q{CREATE DATABASE ?;}, undef, $dbName);
 
-        #TODO Make the PRODUCTION database configurable
-        print "Copying data from foo to $dbName\n";
-        system "mysqldump $dbServerParams foo | mysql $dbServerParams $dbName";
-    };
-    if ($@) {
+        #NOTE 'system' returns the exit code of what was run;
+        #     so '0' is successful. Thus I use 'and' instead
+        #     of 'or' if one of the commands fails to run.
+        #     This is silly and likely to cause confusion so
+        #     at some point I'll work away from using 'system'
+        print "Copying data from $prodDB to $dbName\n";
+        my $dbServerParams = "-h $host -u $user -p'$pass'";
+        system "/usr/local/mysql/bin/mysqldump $dbServerParams $prodDB | /usr/local/bin/mysql $dbServerParams $dbName" and die "Failed to dump $prodDB to $dbName.";
+
+    } catch {
         print "Error: $@\n";
-    }
+        $dbh->disconnect();
+    };
+
+    $dbh->disconnect();
+
 } else {
     print "A non-'YES' answer was received.\n";
     print "Exiting...\n";

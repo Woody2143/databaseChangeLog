@@ -2,7 +2,9 @@
 
 use warnings;
 use strict;
+use Modern::Perl;
 use File::Basename;
+use Data::Dumper;
 use Config::Simple;
 use DBI;
 use DBIx::MultiStatementDo;
@@ -58,13 +60,12 @@ for my $file (sort @files) {
                 or die $batch->dbh->errstr;
             $dbh->do(q{INSERT INTO `Change_Log` (filename) VALUES (?)}, undef, $filename);
             $dbh->commit();
-            print scalar(@results) . " statements successfully executed.\n";
-            print "SQL script $filename ran successfully.\n";
+            print "SQL script $filename - " . scalar(@results) . " statements successfully executed.\n";
         };
         if ($@) {
             $dbh->rollback();
-            print "Database error: $@\n";
-            next;
+            $dbh->disconnect();
+            die "Database error: $@\n";
         }
 
 
