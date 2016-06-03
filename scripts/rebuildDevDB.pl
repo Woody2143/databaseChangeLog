@@ -6,12 +6,10 @@ use Try::Tiny;
 use Config::Simple;
 use DBI;
 
-#TODO I may want to move to Try::Tiny
-
 #TODO figure out how to handle the 'path' issues.
 #     maybe just a variable in the beginning of the script.
 
-my @cfgParams = qw(host db user pass);
+my @cfgParams = qw(host db user pass prodDB);
 my $cfg;
 
 if ( -f 'DEVELOPMENT' ) {
@@ -47,11 +45,10 @@ if ( $answer eq "YES" ) {
 
     try {
         print "Dropping $dbName\n";
-        #TODO change from ->do to ->quote
-        $dbh->do(q{DROP DATABASE ?;}, undef, $dbName);
+        $dbh->do("DROP DATABASE $dbName;");
 
         print "Creating $dbName\n";
-        $dbh->do(q{CREATE DATABASE ?;}, undef, $dbName);
+        $dbh->do("CREATE DATABASE $dbName;");
 
         #NOTE 'system' returns the exit code of what was run;
         #     so '0' is successful. Thus I use 'and' instead
