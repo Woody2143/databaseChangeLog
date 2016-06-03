@@ -44,8 +44,9 @@ if ( $answer eq "YES" ) {
         print "Creating $dbName\n";
         system "mysql $dbServerParams -e 'CREATE DATABASE $dbName;' ";
 
-        print "Copying data from fraud to $dbName\n";
-        system "mysqldump $dbServerParams fraud | mysql $dbServerParams $dbName";
+        #TODO Make the PRODUCTION database configurable
+        print "Copying data from foo to $dbName\n";
+        system "mysqldump $dbServerParams foo | mysql $dbServerParams $dbName";
     };
     if ($@) {
         print "Error: $@\n";

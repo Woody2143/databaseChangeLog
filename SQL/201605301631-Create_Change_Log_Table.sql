@@ -3,4 +3,4 @@ CREATE TABLE `Change_Log` (
       `filename` varchar(120) DEFAULT NULL,
       PRIMARY KEY  (`id`),
       KEY `filename_idx` (`filename`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

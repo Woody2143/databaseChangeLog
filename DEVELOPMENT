@@ -1,0 +1,4 @@
+host: localhost
+db: foo_dev
+user: foo
+pass: foo
